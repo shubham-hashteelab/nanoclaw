@@ -10,4 +10,5 @@
 // telegram
 import './telegram.js';
 
-// whatsapp
+// whatsapp (dependencies not installed yet — uncomment after /add-whatsapp)
+// import './whatsapp.js';

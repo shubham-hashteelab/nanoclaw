@@ -16,5 +16,7 @@
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  // WhatsApp files excluded because @whiskeysockets/baileys is not installed yet.
+  // Remove these exclusions after running /add-whatsapp to install WhatsApp dependencies.
+  "exclude": ["node_modules", "dist", "src/channels/whatsapp.ts", "src/channels/whatsapp.test.ts", "src/whatsapp-auth.ts"]
 }

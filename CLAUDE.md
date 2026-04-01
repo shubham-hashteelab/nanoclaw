@@ -1,6 +1,8 @@
 # NanoClaw
 
-Personal Claude assistant. See [README.md](README.md) for philosophy and setup. See [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) for architecture decisions.
+Customized NanoClaw fork configured to run with self-hosted models on RunPod via vLLM instead of the Anthropic API. Uses the native credential proxy (not OneCLI) with `ANTHROPIC_BASE_URL` pointing to a vLLM instance and `ANTHROPIC_DEFAULT_*_MODEL` env vars to map SDK model slots to the served model. See `.env` for the current endpoint config.
+
+See [README.md](README.md) for philosophy and setup. See [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) for architecture decisions.
 
 ## Quick Context
 
@@ -21,9 +23,9 @@ Single Node.js process with skill-based channel system. Channels (WhatsApp, Tele
 | `groups/{name}/CLAUDE.md` | Per-group memory (isolated) |
 | `container/skills/` | Skills loaded inside agent containers (browser, status, formatting) |
 
-## Secrets / Credentials / Proxy (OneCLI)
+## Secrets / Credentials / Proxy
 
-API keys, secret keys, OAuth tokens, and auth credentials are managed by the OneCLI gateway — which handles secret injection into containers at request time, so no keys or tokens are ever passed to containers directly. Run `onecli --help`.
+Credentials are managed by the native credential proxy (`src/credential-proxy.ts`), which reads from `.env` and injects into container API requests. Containers never see real secrets. The proxy injects both `x-api-key` and `Authorization: Bearer` headers to support both Anthropic API and vLLM endpoints.
 
 ## Skills
 
