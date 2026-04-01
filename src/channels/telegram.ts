@@ -94,6 +94,17 @@ export class TelegramChannel implements Channel {
 
       const chatJid = `tg:${ctx.chat.id}`;
       let content = ctx.message.text;
+
+      // Include replied-to message so the agent has context for reply threads
+      const reply = ctx.message.reply_to_message;
+      if (reply) {
+        const replyText =
+          reply.text || reply.caption || '[non-text message]';
+        const replyFrom =
+          reply.from?.first_name || reply.from?.username || 'Unknown';
+        content = `[Replying to ${replyFrom}: "${replyText}"]\n${content}`;
+      }
+
       const timestamp = new Date(ctx.message.date * 1000).toISOString();
       const senderName =
         ctx.from?.first_name ||
@@ -215,12 +226,14 @@ export class TelegramChannel implements Channel {
         const fileUrl = `https://api.telegram.org/file/bot${this.botToken}/${file.file_path}`;
 
         const buffer = await new Promise<Buffer>((resolve, reject) => {
-          https.get(fileUrl, (res) => {
-            const chunks: Buffer[] = [];
-            res.on('data', (c: Buffer) => chunks.push(c));
-            res.on('end', () => resolve(Buffer.concat(chunks)));
-            res.on('error', reject);
-          }).on('error', reject);
+          https
+            .get(fileUrl, (res) => {
+              const chunks: Buffer[] = [];
+              res.on('data', (c: Buffer) => chunks.push(c));
+              res.on('end', () => resolve(Buffer.concat(chunks)));
+              res.on('error', reject);
+            })
+            .on('error', reject);
         });
 
         const groupDir = path.join(GROUPS_DIR, group.folder);
@@ -237,7 +250,13 @@ export class TelegramChannel implements Channel {
           const isGroup =
             ctx.chat.type === 'group' || ctx.chat.type === 'supergroup';
 
-          this.opts.onChatMetadata(chatJid, timestamp, undefined, 'telegram', isGroup);
+          this.opts.onChatMetadata(
+            chatJid,
+            timestamp,
+            undefined,
+            'telegram',
+            isGroup,
+          );
           this.opts.onMessage(chatJid, {
             id: ctx.message.message_id.toString(),
             chat_jid: chatJid,
@@ -248,7 +267,10 @@ export class TelegramChannel implements Channel {
             is_from_me: false,
           });
 
-          logger.info({ chatJid, image: result.relativePath }, 'Telegram image processed');
+          logger.info(
+            { chatJid, image: result.relativePath },
+            'Telegram image processed',
+          );
           return;
         }
       } catch (err) {
