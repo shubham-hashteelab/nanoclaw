@@ -63,9 +63,14 @@ export function startCredentialProxy(
         delete headers['transfer-encoding'];
 
         if (authMode === 'api-key') {
-          // API key mode: inject x-api-key on every request
+          // API key mode: inject x-api-key and Authorization Bearer on every
+          // request.  Anthropic's API uses x-api-key; third-party endpoints
+          // (e.g. vLLM) typically expect Authorization: Bearer.  Sending both
+          // is safe — each server uses whichever header it recognises.
           delete headers['x-api-key'];
+          delete headers['authorization'];
           headers['x-api-key'] = secrets.ANTHROPIC_API_KEY;
+          headers['authorization'] = `Bearer ${secrets.ANTHROPIC_API_KEY}`;
         } else {
           // OAuth mode: replace placeholder Bearer token with the real one
           // only when the container actually sends an Authorization header
